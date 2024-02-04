@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Application</title>
+    <link rel="stylesheet" type="text/css" href="../static/style.css">
+</head>
+
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+     <div class="chat-container">
+        <div class="room-header">
+            <h2>Chat Room</h2>
+            <input type="text" id="room" placeholder="Enter room number">
+            <button onclick="joinRoom()" id="joinBtn">Join Room</button>
+            <button onclick="leaveRoom()" id="leaveBtn" disabled>Leave Room</button>
+        </div>
+        <div id="message" class="message-container"></div>
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Type your message">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var socket = io('http://127.0.0.1:5000');
+        var joinedRoom = false;
+
+        function joinRoom() {
+            var room = document.getElementById('room').value;
+            if (room !== "") {
+                socket.emit('join', { room: room });
+                joinedRoom = true;
+                document.getElementById('joinBtn').disabled = true;
+                document.getElementById('leaveBtn').disabled = false;
+                document.getElementById('room').disabled = true;
+            } else {
+                alert("请输入你想加入的房间号：");
+            }
+        }
+
+        function leaveRoom() {
+            var room = document.getElementById('room').value;
+            if (room !== "") {
+                socket.emit('leave', { room: room });
+                joinedRoom = false;
+                alert("您已离开房间");
+                document.getElementById('joinBtn').disabled = false;
+                document.getElementById('leaveBtn').disabled = true;
+                document.getElementById('room').disabled = false;
+            } else {
+                alert("您还未加入房间，请先加入");
+            }
+        }
+
+        function sendMessage() {
+            var room = document.getElementById('room').value;
+            var messageInput = document.getElementById('messageInput');
+            var message = messageInput.value;
+            if (joinedRoom) {
+                if (message !== "") {
+                    socket.emit('message', { room: room, message: message });
+                    messageInput.value = "";
+                } else {
+                    alert("消息不能为空");
+                }
+            } else {
+                alert("请先加入房间");
+            }
+        }
+
+        socket.on('message', function(message) {
+            var messagesDiv = document.getElementById('message');
+            messagesDiv.innerHTML += '<p>' + message + '</p>';
+        });
+</script>
+
+
+</body>
+
+</html>
